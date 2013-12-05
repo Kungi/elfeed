@@ -15,6 +15,11 @@
 (require 'elfeed-lib)
 (require 'elfeed-show)
 
+(defcustom elfeed-search-result-format
+  '("date" "title" "feed-title" "tags")
+  "elfeed search buffer structure"
+  :group 'elfeed-search)
+
 (defvar elfeed-search-entries ()
   "List of the entries currently on display.")
 
@@ -173,14 +178,23 @@ Clear `elfeed-search-cache' (or restart Emacs) after setting."
                                title-width
                                elfeed-search-title-max-width)
                         :left)))
-    (when (elfeed-tagged-p 'unread entry)
-      (push 'bold title-faces))
-    (insert (propertize date 'face 'elfeed-search-date-face) " ")
-    (insert (propertize title-column 'face title-faces) " ")
-    (when feed-title
-      (insert (propertize feed-title 'face 'elfeed-search-feed-face) " "))
-    (when tags
-      (insert "(" tags-str ")"))))
+
+	(defun elfeed-search-insert-field (field)
+	  (cond
+	   ((string-equal field "date")
+		(insert (propertize date 'face 'elfeed-search-date-face) " ")) ;
+	   ((string-equal field "title")
+		(insert (propertize title-column 'face title-faces) " "))
+	   ((string-equal field "feed-title")
+		(when feed-title
+		  (insert (propertize feed-title 'face 'elfeed-search-feed-face) " ")))
+	   ((string-equal field "tags")
+		(when tags
+		  (insert "(" tags-str ")")))))
+
+	(dolist (field elfeed-search-result-format)
+	  (elfeed-search-insert-field field))))
+
 
 (defun elfeed-search-parse-filter (filter)
   "Parse the elements of a search filter."
